@@ -33,7 +33,7 @@ class Conexion:
             self.cursor = None
             self.db = None
     def obtener_usuario(self, username):
-        consulta_sql = "SELECT * FROM usuarios WHERE username = %s"
+        consulta_sql = "SELECT * FROM PERSONA WHERE username = %s"
         self.cursor.execute(consulta_sql, (username,))
         resultado = self.cursor.fetchone()
         if resultado:
@@ -49,7 +49,7 @@ class Conexion:
             return None
 
     def registrar_usuario(self, username, nombre, apellido, contraseña, email, fecha_nacimiento):
-        consulta = "INSERT INTO usuarios (username, nombre, apellido, contraseña, email, fecha_nacimiento) VALUES (%s, %s, %s, %s, %s, %s);"
+        consulta = "INSERT INTO PERSONA (username, nombre, apellido, contraseña, email, BIRTHDATE) VALUES (%s, %s, %s, %s, %s, %s);"
         try:
             self.cursor.execute(consulta, (username, nombre, apellido, contraseña, email, fecha_nacimiento))
             self.db.commit()
