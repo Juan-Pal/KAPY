@@ -1,12 +1,10 @@
 import mysql.connector
-
 class Libro:
     def __init__(self, titulo, autor, fecha_publicacion, genero):
         self.titulo = titulo
         self.autor = autor
         self.fecha_publicacion = fecha_publicacion
         self.genero = genero
-
 class Usuario:
     def __init__(self, username, nombre, apellido, contraseña, email):
         self.username = username
@@ -14,14 +12,12 @@ class Usuario:
         self.apellido = apellido
         self.contraseña = contraseña
         self.email = email
-
 class Reseña:
     def __init__(self, contenido, valoracion, usuario, libro):
         self.contenido = contenido
         self.valoracion = valoracion
         self.usuario = usuario
         self.libro = libro
-
 class Conexion:
     def __init__(self, host, user, password, database):
         try:
@@ -36,7 +32,6 @@ class Conexion:
             print(f"Error al conectar a la base de datos: {err}")
             self.cursor = None
             self.db = None
-
     def obtener_usuario(self, username):
         consulta_sql = "SELECT * FROM usuarios WHERE username = %s"
         self.cursor.execute(consulta_sql, (username,))
@@ -131,6 +126,73 @@ class Conexion:
         except mysql.connector.Error as err:
             print(f"Error al obtener información del libro: {err}")
             return None
+
+    def agregar_libro(self, titulo, autor, average_rating, isbn, isbn13, language_code, num_pages, ratings_count,
+                      text_reviews_count, publication_date, publisher):
+        consulta = "INSERT INTO BOOKS (title, author, average_rating, isbn, isbn13, language_code, num_pages, ratings_count, text_reviews_count, publication_date, publisher) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        try:
+            self.cursor.execute(consulta, (
+            titulo, autor, average_rating, isbn, isbn13, language_code, num_pages, ratings_count, text_reviews_count,
+            publication_date, publisher))
+            self.db.commit()
+            return True
+        except mysql.connector.Error as err:
+            print(f"Error al agregar libro: {err}")
+            return False
+
+    def agregar_favorito(self, username, book_id):
+        consulta = "INSERT INTO GUARDA (USERNAME, bookId, FECHAGUARDA) VALUES (%s, %s, %s)"
+
+        try:
+            self.cursor.execute(consulta, (username, book_id, "Now()"))
+            self.db.commit()
+            return True
+        except mysql.connector.Error as err:
+            print(f"Error al agregar a favoritos: {err}")
+            return False
+
+    def obtener_libros_favoritos(self, username):
+        consulta = """
+           SELECT B.bookID, B.title, B.author, G.FECHAGUARDA
+           FROM GUARDA G
+           INNER JOIN BOOKS B ON G.bookId = B.bookID
+           WHERE G.USERNAME = %s
+           ORDER BY G.FECHAGUARDA DESC;
+           """
+        try:
+            self.cursor.execute(consulta, (username,))
+            return self.cursor.fetchall()
+        except mysql.connector.Error as err:
+            print(f"Error al obtener libros favoritos: {err}")
+            return []
+    def eliminar_favorito(self, username, book_id):
+        consulta = "DELETE FROM GUARDA WHERE USERNAME = %s AND bookId = %s"
+        try:
+            self.cursor.execute(consulta, (username, book_id))
+            self.db.commit()
+            return True
+        except mysql.connector.Error as err:
+            print(f"Error al eliminar de favoritos: {err}")
+            return False
+    def eliminar_libro(self, libro_id):
+        consulta = "DELETE FROM BOOKS WHERE bookID = %s"
+        try:
+            self.cursor.execute(consulta, (libro_id,))
+            self.db.commit()
+            return True
+        except mysql.connector.Error as err:
+            print(f"Error al eliminar libro: {err}")
+            return False
+
+    def eliminar_resena(self, resena_id):
+        consulta = "DELETE FROM RESEÑA WHERE IDRESEÑA = %s"
+        try:
+            self.cursor.execute(consulta, (resena_id,))
+            self.db.commit()
+            return True
+        except mysql.connector.Error as err:
+            print(f"Error al eliminar reseña: {err}")
+            return False
 
     def mostrar_reseñas_libro(self, titulo_libro):
         consulta = """
