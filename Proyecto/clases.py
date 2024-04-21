@@ -6,12 +6,13 @@ class Libro:
         self.fecha_publicacion = fecha_publicacion
         self.genero = genero
 class Usuario:
-    def __init__(self, username, nombre, apellido, contraseña, email):
+    def __init__(self, username, nombre, apellido, contraseña, email,es_admin):
         self.username = username
         self.nombre = nombre
         self.apellido = apellido
         self.contraseña = contraseña
         self.email = email
+        self.es_admin = bool(es_admin)
 class Reseña:
     def __init__(self, contenido, valoracion, usuario, libro):
         self.contenido = contenido
@@ -32,20 +33,18 @@ class Conexion:
             print(f"Error al conectar a la base de datos: {err}")
             self.cursor = None
             self.db = None
+
     def obtener_usuario(self, username):
-        consulta_sql = "SELECT * FROM PERSONA WHERE username = %s"
-        self.cursor.execute(consulta_sql, (username,))
-        resultado = self.cursor.fetchone()
-        if resultado:
-            usuario = Usuario(
-                resultado['username'],
-                resultado['nombre'],
-                resultado['apellido'],
-                resultado['contraseña'],
-                resultado['email']
-            )
-            return usuario
-        else:
+        consulta_sql = "SELECT username, nombre, apellido, contraseña, email, es_admin FROM PERSONA WHERE username = %s"
+        try:
+            self.cursor.execute(consulta_sql, (username,))
+            resultado = self.cursor.fetchone()
+            if resultado:
+                return Usuario(**resultado)
+            else:
+                return None
+        except mysql.connector.Error as err:
+            print(f"Error al buscar el usuario: {err}")
             return None
 
     def registrar_usuario(self, username, nombre, apellido, contraseña, email, fecha_nacimiento):
@@ -156,7 +155,7 @@ class Conexion:
            SELECT B.bookID, B.title, B.author, G.FECHAGUARDA
            FROM GUARDA G
            INNER JOIN BOOKS B ON G.bookId = B.bookID
-           WHERE G.USERNAME = %s
+           WHERE G.USERNAME`` = %s
            ORDER BY G.FECHAGUARDA DESC;
            """
         try:
